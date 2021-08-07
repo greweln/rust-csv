@@ -39,15 +39,7 @@ fn run() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-//fn run() -> Result<(), Box<dyn Error>> {
-    //let file_path = get_first_arg()?;
-    //let mut rdr = csv::Reader::from_path(file_path)?;
-    //for result in rdr.deserialize() {
-        //let record: Record = result?;
-        //println!("{:#?}", record.id);
-    //}
-    //Ok(())
-//}
+
 
 fn main()  {
     if let Err(err) = run() {
