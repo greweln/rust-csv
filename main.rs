@@ -18,7 +18,7 @@ struct Record {
 
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "My own Rust-csv program")]
+#[structopt(about = "Rust-csv parser")]
 struct Opts {
     #[structopt(short, long, parse(from_os_str))]
     infile: PathBuf,
