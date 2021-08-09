@@ -1,49 +1,70 @@
-use std::fs::File;
-use std::env;
-use std::ffi::OsString;
+
+use std::path::PathBuf;
+use structopt::StructOpt;
 use std::process;
-use std::error::Error;
 use serde::{Serialize, Deserialize};
-use std::io;
-use csv::ReaderBuilder;
+use std::error::Error;
+use csv::{Reader, Writer};
+
+
 
 #[derive(Debug, Serialize, Deserialize)]
-//#[serde(rename_all = "PascalCase")]
 struct Record {
-    #[serde(deserialize_with = "csv::invalid_option")]
-    id: Option<i32>,
-    #[serde(deserialize_with = "csv::invalid_option")]
-    name: Option<String>,
-    #[serde(deserialize_with = "csv::invalid_option")]
-    email: Option<String>
+    id: i32,
+    name: String,
+    email: String
 }
 
-fn get_first_arg() -> Result<OsString, Box<dyn Error>> {
-    match env::args_os().nth(1) {
-        None => Err(From::from("expected 1 argument but got none")),
-        Some(file_path) => Ok(file_path),
-    }
+
+
+#[derive(Debug, StructOpt)]
+#[structopt(about = "My own Rust-csv program")]
+struct Opts {
+    #[structopt(short, long, parse(from_os_str))]
+    infile: PathBuf,
 }
 
-fn run() -> Result<(), Box<dyn Error>> {
-    let file_path = get_first_arg()?;
-    let mut rdr = ReaderBuilder::new()
-        .delimiter(b',')
-        .comment(Some(b','))
-        .comment(Some(b'.'))
-        .from_path(file_path)?;
-    for result in rdr.deserialize() {
-        let record: Record = result?;
-        println!("{:?}", record);
+
+
+fn read() -> Result<(), Box<dyn Error>> {
+    let opts = Opts::from_args();
+    let mut rdr = Reader::from_path(opts.infile)?;
+    for result in rdr.deserialize::<Record>() {
+        match result {
+            Ok(record) => println!("ID: {:#}, NAME: {:#}, EMAIL: {:#}", 
+                                   record.id,
+                                   record.name,
+                                   record.email),
+            Err(_e) => () //eprintln!("Error: {}", e)
+        }
     }
     Ok(())
 }
 
 
 
+
+fn create() -> Result<(), Box<dyn Error>> {
+    let opts = Opts::from_args();
+    let mut wtr = Writer::from_path(opts.infile)?;
+    wtr.serialize(Record {
+        id: 501,
+        name: "John Doe".to_string(),
+        email: "john.doe@protonmail.com".to_string()
+    })?;
+    wtr.flush()?;
+    Ok(())
+}
+
+
+
 fn main()  {
-    if let Err(err) = run() {
-        println!("{:?}", err);
+    if let Err(e) = read() {
+        println!("{:?}", e);
+        process::exit(1);
+    }
+    if let Err(e) = create() {
+        println!("{:?}", e);
         process::exit(1);
     }
 }
